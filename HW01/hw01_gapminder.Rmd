@@ -1,0 +1,52 @@
+---
+title: "Exercise 2: R Markdown for Gapminder Exploration"
+author: "Tracy Wang"
+date: "September 2019"
+output: 
+  github_document:
+    toc: true
+---
+## Orange
+
+Orange is a dataset about the growth of five orange trees. This is a record of their trunk circumferences (in cm) at certain ages (in days).
+
+The headers for the Orange dataset, as determined through the names() function, are:
+
+```{r load, warning=FALSE, echo=FALSE}
+library(tibble)
+library(gapminder)
+library(DT)
+
+names(Orange)
+```
+
+## Summary
+
+Here is a summary of the Orange dataset using the summary() function:
+
+```{r summary, warning=FALSE, echo=FALSE}
+summary(Orange)
+```
+
+## Pie
+
+In the Orange dataset, each individual tree is labeled with an identifying number, ranging from 1 to 5. The following pie chart represents the relative number of times each tree is represented in the dataset:
+
+```{r pie, warning=FALSE, echo=FALSE}
+pie(table(Orange$Tree), edges=200, radius=1)
+
+```
+
+Each tree has an equal number of data points.
+
+
+## Plot
+
+And here is a plot of tree circumference versus age:
+
+```{r plot, warning=FALSE, echo=FALSE}
+plot(x=Orange[,2], y=Orange[,3], xlab="Age (days)", ylab="Circumference (cm)", main="Tree size with age", type='p')
+abline(lm(circumference~age, data=Orange), col='red')
+```
+
+Obviously we cannot conclude this is a linear relationship. However, the goal here was simply to add a trendline, and that was a success!
