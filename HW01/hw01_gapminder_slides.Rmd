@@ -38,8 +38,8 @@ summary(Orange)
 
 In the Orange dataset, each individual tree is labeled with an identifying number, ranging from 1 to 5. The following pie chart represents the relative number of times each tree is represented in the dataset:
 
-```{r pie, warning=FALSE, echo=FALSE}
-pie(table(Orange$Tree), edges=200, radius=0.8)
+```{r pie, warning=FALSE, echo=FALSE, fig.height=5}
+pie(table(Orange$Tree), edges=100, radius=1)
 
 ```
 
