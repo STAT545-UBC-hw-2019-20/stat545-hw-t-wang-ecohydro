@@ -78,7 +78,7 @@ gapminder %>%
 #Range of pop:
 gapminder %>% 
   select(pop) %>% 
-  range() %>% 
+  range()
 ```
 
 What values are typical? What’s the spread? What’s the distribution? Etc., tailored to the variable at hand.
@@ -95,4 +95,50 @@ hist(gapminder$pop, breaks=50)
 ```
 
 Feel free to use summary stats, tables, figures.
+
+# Exercise 3: Explore various plot types
+
+Make two plots that have some value to them. That is, plots that someone might actually consider making for an analysis. Just don’t make the same plots we made in class – feel free to use a data set from the datasets R package if you wish.
+
+A scatterplot of two quantitative variables.
+One other plot besides a scatterplot.
+
+You don’t have to use all the data in every plot! It’s fine to filter down to one country or a small handful of countries.
+
+```{r 3, warning=FALSE, echo=FALSE}
+#GDP per capita vs population of all countries
+gapminder %>% 
+  select(continent, pop, gdpPercap) %>% 
+  ggplot(aes(x=pop, y=gdpPercap, color=continent))+geom_point()+scale_x_log10()+scale_y_log10()
+
+#change in average life expectancy, 1952-2007, by continent
+#note: mean calculated by country (not population)
+gapminder %>% 
+  select(continent, year, lifeExp) %>% 
+  group_by(year, continent) %>% 
+  summarise(meanlifeExp=mean(lifeExp)) %>% 
+  ggplot(aes(x=year, y=meanlifeExp, color=continent))+geom_line()
+
+#average life expectancy per continent, 1952-2007
+#note: mean calculated by country (not population)
+gapminder %>% 
+  group_by(continent, year) %>% 
+  summarise(meanlifeExp=mean(lifeExp)) %>% 
+  ggplot(aes(x=continent, y=meanlifeExp, fill=year))+geom_bar(stat="identity", position=position_dodge2())
+```
+
+# Recycling
+Evaluate this code and describe the result. Presumably the analyst’s intent was to get the data for Rwanda and Afghanistan. Did they succeed? Why or why not? If not, what is the correct way to do this?
+```{r recycling1}
+filter(gapminder, country == c("Rwanda", "Afghanistan"))
+```
+The analyst was not successful. They only managed to pull half of the data that is required from the dataset. This is because of the vector input in the filter() function.
+
+By default, when gapminder is printed it is by default ordered by country name, then year. When the analyst entered `c("Rwanda, Afghanistan")` as the filtering criterion, R treated each country listed as an individual query, while still keeping track of the "year" column. It searched the dataset until it came upon the first entry with country matching "Rwanda" (year==1952), then it skipped to the next country in the vector and scoured the dataset again until it came upon the next "Afghanistan" entry. But because the dataset is also arranged by year, R found the entry for the next year where the country was "Afghanistan (year==1957). Then it was back to "Rwanda", and then "Afghanistan", and so forth. The end result is a dataset that has one complete suite of years (1952-2007) but where the country alternates between "Rwanda" and "Afghanistan". Thus only half of what the analyst was looking for was recovered.
+
+The correct way to code this query would be:
+
+```{r recycling2}
+filter(gapminder, country=="Rwanda" | country=="Afghanistan")
+```
 
