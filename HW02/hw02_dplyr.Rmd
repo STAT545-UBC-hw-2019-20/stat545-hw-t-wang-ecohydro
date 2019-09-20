@@ -2,7 +2,7 @@
 title: "Assignment 2: Explore Gapminder and use dplyr"
 output: html_document
 ---
-# Exercise 1: Basic dplyr
+# Exercise 1: Basic `dplyr`
 
 ```{r load, warning=FALSE, echo=FALSE}
 library(gapminder)
@@ -62,4 +62,37 @@ gapminder %>%
 ```
 
 
+# Exercise 2: Explore individual variables with `dplyr`
+
+Pick one categorical variable and one quantitative variable to explore. Answer the following questions in whichever way you think is appropriate, using dplyr:
+
+Variables chosen: continent (qualitative), pop (quantitative)
+
+
+What are possible values (or range, whichever is appropriate) of each variable?
+```{r 2A, warning=FALSE}
+#Possible values for country:
+gapminder %>% 
+  distinct(continent)
+
+#Range of pop:
+gapminder %>% 
+  select(pop) %>% 
+  range() %>% 
+```
+
+What values are typical? What’s the spread? What’s the distribution? Etc., tailored to the variable at hand.
+
+```{r 2B, warning=FALSE}
+cont_count <- gapminder %>% 
+  select(continent) %>% 
+  group_by(continent) %>% 
+  count()
+ggplot(cont_count, aes(x=continent, y=n))+geom_col()
+pie(cont_count$n, labels=cont_count$continent)
+
+hist(gapminder$pop, breaks=50)
+```
+
+Feel free to use summary stats, tables, figures.
 
