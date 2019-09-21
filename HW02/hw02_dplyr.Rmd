@@ -1,115 +1,151 @@
 ---
 title: "Assignment 2: Explore Gapminder and use dplyr"
-output: html_document
+output: 
+  html_document:
+    toc: true
 ---
 # Exercise 1: Basic `dplyr`
 
 ```{r load, warning=FALSE, echo=FALSE}
-library(gapminder)
-library(tidyverse)
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(knitr))
+knitr::opts_chunk$set(fig.align = "center")
 ```
 
 
 ## 1.1
-Use filter() to subset the gapminder data to three countries of your choice in the 1970’s.
+*Use `filter()` to subset the gapminder data to three countries of your choice in the 1970’s.*
+
+ANSWER:
 ```{r 1.1, warning=FALSE, echo=FALSE}
 filtered <- gapminder %>% 
   filter(year>=1970 & year<=1980) %>% 
   filter(country=='Norway' | country=='Sweden' | country=='Denmark')
-filtered
+kable(filtered)
 ```
 
 ## 1.2
-Use the pipe operator %>% to select “country” and “gdpPercap” from your filtered dataset in 1.1.
+*Use the pipe operator `%>%` to select “country” and “gdpPercap” from your filtered dataset in 1.1.*
+
+ANSWER:
 ```{r 1.2, warning=FALSE, echo=FALSE}
 filtered %>% 
-  select(country, gdpPercap)
+  select(country, gdpPercap) %>% 
+  kable()
 ```
 
 ## 1.3
-Filter gapminder to all entries that have experienced a drop in life expectancy. Be sure to include a new variable that’s the increase in life expectancy in your tibble. Hint: you might find the lag() or diff() functions useful.
-
+*Filter gapminder to all entries that have experienced a drop in life expectancy. Be sure to include a new variable that’s the increase in life expectancy in your tibble. Hint: you might find the `lag()` or `diff()` functions useful.*
 <!--
-add extra column that's the difference
+add extra column as the difference b/w years
 then select columns where the difference is negative
 -->
+
+ANSWER:
 ```{r 1.3, warning=FALSE, echo=FALSE}
 gapminder %>% 
   group_by(country) %>% 
   arrange(year) %>% 
-  mutate(change=lifeExp-lag(lifeExp, 1)) %>% 
-  filter(change<0)
+  mutate(change=round(lifeExp-lag(lifeExp, 1), 3)) %>% 
+  filter(change<0) %>% 
+  datatable(as_tibble())
 ```
 
 ## 1.4
 Exercise chosen:
 
-Filter gapminder so that it shows the max GDP per capita experienced by each country. Hint: you might find the max() function useful here.
+*Filter gapminder so that it shows the max GDP per capita experienced by each country. Hint: you might find the `max()` function useful here.*
 
+ANSWER:
 ```{r 1.4, warning=FALSE, echo=FALSE}
 gapminder %>% 
   group_by(country) %>% 
-  filter(gdpPercap==max(gdpPercap))
+  filter(gdpPercap==max(gdpPercap)) %>% 
+  datatable(as_tibble())
 ```
 
 ## 1.5
-Produce a scatterplot of Canada’s life expectancy vs. GDP per capita using ggplot2, without defining a new variable. That is, after filtering the gapminder data set, pipe it directly into the ggplot() function. Ensure GDP per capita is on a log scale.
+*Produce a scatterplot of Canada’s life expectancy vs. GDP per capita using ggplot2, without defining a new variable. That is, after filtering the gapminder data set, pipe it directly into the `ggplot()` function. Ensure GDP per capita is on a log scale.*
+
+ANSWER:
 
 ```{r 1.5, warning=FALSE, echo=FALSE}
 gapminder %>% 
   filter(country=='Canada') %>% 
-  ggplot(aes(x=gdpPercap, y=lifeExp)) + geom_point() + scale_x_log10()
+  ggplot(aes(x=gdpPercap, y=lifeExp)) + geom_point() + scale_x_log10()+ggtitle("Life Expectancy vs. GDP per capita of Canada")+xlab("GDP per capita")+ylab("life expectancy")
 ```
 
 
 # Exercise 2: Explore individual variables with `dplyr`
 
-Pick one categorical variable and one quantitative variable to explore. Answer the following questions in whichever way you think is appropriate, using dplyr:
+*Pick one categorical variable and one quantitative variable to explore. Answer the following questions in whichever way you think is appropriate, using `dplyr`:*
 
-Variables chosen: continent (qualitative), pop (quantitative)
+Variables chosen: 
 
+- `continent` (qualitative)
+- `pop` (quantitative)
 
-What are possible values (or range, whichever is appropriate) of each variable?
-```{r 2A, warning=FALSE}
-#Possible values for country:
+*What are possible values (or range, whichever is appropriate) of each variable?*
+
+ANSWER:
+```{r 2A, warning=FALSE, echo=FALSE}
+#Possible values for continent:
 gapminder %>% 
-  distinct(continent)
+  distinct(continent) %>% 
+  kable(caption="Possible values for continent:")
 
 #Range of pop:
 gapminder %>% 
   select(pop) %>% 
-  range()
+  range() %>% 
+  kable(caption="Minimum and maximum values (range) of pop, respectively:", align='l')
+#I think it's pretty intuitive which is which, please don't ding me for not identifying them explicitly
 ```
 
-What values are typical? What’s the spread? What’s the distribution? Etc., tailored to the variable at hand.
+*What values are typical? What’s the spread? What’s the distribution? Etc., tailored to the variable at hand. Feel free to use summary stats, tables, figures.*
 
-```{r 2B, warning=FALSE}
+ANSWER:
+
+```{r 2B, warning=FALSE, echo=FALSE}
+#count of countries per continent
 cont_count <- gapminder %>% 
   select(continent) %>% 
   group_by(continent) %>% 
   count()
-ggplot(cont_count, aes(x=continent, y=n))+geom_col()
-pie(cont_count$n, labels=cont_count$continent)
+ggplot(cont_count, aes(x=continent, y=n))+geom_col()+ggtitle("Fig. 2A: Countries per continent")+ylab("number of countries")
 
-hist(gapminder$pop, breaks=50)
+#same data, pie graph
+pie(cont_count$n, labels=cont_count$continent, main="Fig. 2B: Countries per continent (proportion)")
+
+#distribution of country pop (50 numerical categories)
+hist(gapminder$pop, breaks=50, main="Fig. 2C: Frequency distribution of population per country", xlab="population")
 ```
 
-Feel free to use summary stats, tables, figures.
+## Discussion
+
+- **Fig. 2A** describes the number of countries in each continent (that are represented in Gapminder). We can see that Africa has the greatest number of countries in the dataset, and Oceania has the fewest.
+- **Fig. 2B** shows the same data, but as a pie graph, thus showing the number of countries relative to each other. Again, we can see that Africa holds the greatest proportion of total countries, and Oceania the smallest.
+- **Fig. 2C** is a frequency distribution graph of populations by country, divided into 50 numerical categories. Most countries  to have a small population, less than 100 million, while very few have large populations in the hundreds of millions and even over 1 billion.
+
 
 # Exercise 3: Explore various plot types
 
-Make two plots that have some value to them. That is, plots that someone might actually consider making for an analysis. Just don’t make the same plots we made in class – feel free to use a data set from the datasets R package if you wish.
+*Make two plots that have some value to them. That is, plots that someone might actually consider making for an analysis. Just don’t make the same plots we made in class – feel free to use a data set from the datasets R package if you wish.*
 
-A scatterplot of two quantitative variables.
-One other plot besides a scatterplot.
+- *A scatterplot of two quantitative variables.*
+- *One other plot besides a scatterplot.*
 
-You don’t have to use all the data in every plot! It’s fine to filter down to one country or a small handful of countries.
+*You don’t have to use all the data in every plot! It’s fine to filter down to one country or a small handful of countries.*
+
+ANSWER:
 
 ```{r 3, warning=FALSE, echo=FALSE}
 #GDP per capita vs population of all countries
 gapminder %>% 
   select(continent, pop, gdpPercap) %>% 
-  ggplot(aes(x=pop, y=gdpPercap, color=continent))+geom_point()+scale_x_log10()+scale_y_log10()
+  ggplot(aes(x=pop, y=gdpPercap, color=continent))+geom_point()+scale_x_log10()+scale_y_log10()+ggtitle("Fig. 3A: GDP per capita vs population", subtitle="All countries, divided by continent")+xlab("population")+ylab("GDP per capita")
 
 #change in average life expectancy, 1952-2007, by continent
 #note: mean calculated by country (not population)
@@ -117,28 +153,51 @@ gapminder %>%
   select(continent, year, lifeExp) %>% 
   group_by(year, continent) %>% 
   summarise(meanlifeExp=mean(lifeExp)) %>% 
-  ggplot(aes(x=year, y=meanlifeExp, color=continent))+geom_line()
+  ggplot(aes(x=year, y=meanlifeExp, color=continent))+geom_line()+ggtitle("Fig. 3B: Change in average life expectancy, 1952-2007", subtitle="Mean calculated by country (not population)")+ylab("average life expectancy")
 
-#average life expectancy per continent, 1952-2007
+#average life expectancy, 1952-2007, by continent
 #note: mean calculated by country (not population)
 gapminder %>% 
   group_by(continent, year) %>% 
   summarise(meanlifeExp=mean(lifeExp)) %>% 
-  ggplot(aes(x=continent, y=meanlifeExp, fill=year))+geom_bar(stat="identity", position=position_dodge2())
+  ggplot(aes(x=continent, y=meanlifeExp, fill=year))+geom_bar(stat="identity", position=position_dodge2())+ggtitle("Fig. 3C: Average life expectancy, 1952-2007, by continent", subtitle="Mean calculated by country, not population")+ylab("average life expectancy")
 ```
+
+## Discussion
+- **Fig. 3A:** GDP per capita vs population for each country, with colour differentiating countries of each continent. From this scatter plot, we can see that Asia has the greatest variability in GDP per capita vs population, with data points on both the upper left and lower right of the graph. Both the x and y axes have been adjusted to a logarithmic scale.
+- **Fig. 3B:** change in life expectancy for each continent over time. Overall, all the continents have experienced an increase in life expectancy, with different patterns of change (e.g. Africa's increase plateaued in the 1990s).
+  - Though this graph manipulates data a little differently than what was made in class, it's still a line plot, so another visualization of this same data was attempted...
+- **Fig. 3C:** Grouped bar graph of average life expectancy by continent. Here, the years are split into separate 'sub-bars' within each continent. It conveys much of the same information as Fig. 3B. Note that for both Fic. 3B and 3C, the average life expectancy was weighted by country and not population, i.e. a country of 300 people and a country of 300,000 people are equally 'important' in the mean calculation. 
+  - **Revision:** Not long after writing up this discussion, it was (shamefully) realized that grouped bar graphs of this type might more typically present data like the following...
+```{r 3r, warning=FALSE, echo=FALSE}
+#average life expectancy per continent, 1952-2007
+#note: mean calculated by country (not population)
+gapminder %>% 
+  mutate(year=paste(year)) %>% 
+  group_by(continent, year) %>% 
+  summarise(meanlifeExp=mean(lifeExp)) %>% 
+  ggplot(aes(x=year, y=meanlifeExp, fill=continent))+geom_bar(stat="identity", position=position_dodge2(width=2))+ggtitle("Fig. 3D: Average life expectancy per continent, 1952-2007", subtitle="Mean calculated by country")+ylab("average life expectancy")
+```
+
+  - But the emphasis of this presentation shifts instead to the difference between continents, and not changes within each continent over the years. Plus, with 12 years (and thus 12 bars) to keep track of, the data sure becomes crowded and hard to follow.
 
 # Recycling
 Evaluate this code and describe the result. Presumably the analyst’s intent was to get the data for Rwanda and Afghanistan. Did they succeed? Why or why not? If not, what is the correct way to do this?
 ```{r recycling1}
-filter(gapminder, country == c("Rwanda", "Afghanistan"))
+filter(gapminder, country == c("Rwanda", "Afghanistan")) %>% 
+  kable() #THIS LINE FOR FORMATTING ONLY
 ```
+
 The analyst was not successful. They only managed to pull half of the data that is required from the dataset. This is because of the vector input in the filter() function.
 
-By default, when gapminder is printed it is by default ordered by country name, then year. When the analyst entered `c("Rwanda, Afghanistan")` as the filtering criterion, R treated each country listed as an individual query, while still keeping track of the "year" column. It searched the dataset until it came upon the first entry with country matching "Rwanda" (year==1952), then it skipped to the next country in the vector and scoured the dataset again until it came upon the next "Afghanistan" entry. But because the dataset is also arranged by year, R found the entry for the next year where the country was "Afghanistan (year==1957). Then it was back to "Rwanda", and then "Afghanistan", and so forth. The end result is a dataset that has one complete suite of years (1952-2007) but where the country alternates between "Rwanda" and "Afghanistan". Thus only half of what the analyst was looking for was recovered.
+By default, when gapminder is printed it is ordered by country name, then year. When the analyst entered `c("Rwanda, Afghanistan")` as the filtering criterion, R treated each country listed as an individual query, while still keeping track of the "year" column. It searched the dataset until it came upon the first entry with country matching "Rwanda" (year==1952), then it skipped to the next country in the vector and scoured the dataset again until it came upon the next "Afghanistan" entry. But because the dataset is also arranged by year, R found the entry for the next year where the country was "Afghanistan (year==1957). Then it was back to "Rwanda", and then "Afghanistan", and so forth. 
 
-The correct way to code this query would be:
+The end result is a dataset that has one complete suite of years (1952-2007) but where the country alternates between "Rwanda" and "Afghanistan". Thus only half of what the analyst was looking for was recovered.
 
-```{r recycling2}
-filter(gapminder, country=="Rwanda" | country=="Afghanistan")
+The correct way to code this query would be (ignoring the second line which is to format the resulting table):
+
+```{r recycling2, warning=FALSE}
+filter(gapminder, country=="Rwanda" | country=="Afghanistan") %>% 
+  datatable(as_tibble()) #FORMATTING ONLY
 ```
 
