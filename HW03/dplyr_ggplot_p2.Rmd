@@ -24,17 +24,20 @@ I came up with two possible interpretations of this question. Here are the solut
 
 1. Maximum and minimum GDP per capita **of all time** achieved in each continent:
 
+### Figure 1
+
 ```{r}
 per_cont <- gapminder %>% 
   group_by(continent) %>% 
   filter(gdpPercap==min(gdpPercap) | gdpPercap==max(gdpPercap)) %>% 
   mutate(type=if_else(gdpPercap==max(gdpPercap), paste("max"), paste("min"))) %>% 
   arrange(type)
+
 kable(per_cont, caption="Maximum and minimum historical GDP per capita of each continent")
 ```
 
 - Here's a bar graph edition with a logarithmic y-axis scale.
-  
+
 ```{r}
 per_cont %>% 
   group_by(continent, type) %>% 
@@ -52,6 +55,8 @@ per_cont %>%
 
   - Let's present all the maximum and minimum GDPs as a box plot so we can see their spread over the years.
 
+### Figure 2
+
 ```{r}
 per_cont_year <- gapminder %>% 
   group_by(continent, year) %>% 
@@ -64,11 +69,13 @@ per_cont_year %>%
   geom_boxplot(aes(fill=type)) +
   geom_jitter(alpha=0.5, aes(color=continent)) +
   scale_y_log10(labels=comma_format()) + theme_bw() +
-  ggtitle("Distribution of maximum and minimum GDP per capita by continent", subtitle="1952-2007") +
-  ylab("GDP per capita") + scale_fill_discrete("", labels=c("maximum", "minimum"))
+  ylab("GDP per capita") + scale_fill_discrete("", labels=c("maximum", "minimum")) +
+  ggtitle("Distribution of maximum and minimum GDP per capita by continent", subtitle="1952-2007")
 ```
 
 - GDP changes for each year will be difficult to show in one clean and easy plot. The ideal situation might be to split the data by year and generate a separate plot for each year, sort of like this: 
+
+### Figure 3
   
 ```{r}
 per_cont_year %>% 
@@ -76,8 +83,8 @@ per_cont_year %>%
   geom_bar(stat="identity", position=position_dodge2(), aes(fill=continent)) +
   facet_wrap(~year) +
   scale_y_log10(labels=comma_format()) +
-  ggtitle("Maximum and minimum GDP per capita by continent") +
-  ylab("GDP per capita") + scale_x_discrete(labels=NULL)
+  ylab("GDP per capita") + scale_x_discrete(labels=NULL) +
+  ggtitle("Maximum and minimum GDP per capita by continent")
 ```
   
   - Inferences from this plot:
@@ -103,67 +110,84 @@ Through the analyses above, we can make some general inferences:
 
 I'll be plotting a weighted mean by population (following up on some plotting I did in the last assignment, where I calculated the mean by country and explained why that type of analysis could be faulty). To get a sense of what we're working with, here is a graph comparing life expectancy and population:
 
+### Figure 4
+
 ```{r}
 gapminder %>% 
-  ggplot(aes(x=pop, y=lifeExp, color=year)) + geom_point() + scale_x_log10(labels=comma_format()) +
-  ggtitle("Life expectancy vs. population") +
-  xlab("population") + ylab("life expectancy")
+  ggplot(aes(x=pop, y=lifeExp, color=year)) + 
+  geom_point() + 
+  scale_x_log10(labels=comma_format()) +
+  xlab("population") + ylab("life expectancy") +
+  ggtitle("Life expectancy vs. population")
 ```
 
 Over the years, there seems to be a general upward trend in life expectancy and population, roughly following the same exponential increase. But the population of all the countries varies greatly. 
 
 Here is mean global life expectancy over the years, weighted by population:
 
+### Figure 5
+
 ```{r}
 lifeExp_pop <- gapminder %>% 
   group_by(year) %>% 
   summarize(global_avg_lifeExp=weighted.mean(lifeExp, pop))
+
 kable(lifeExp_pop, caption="Global life expectancy, weighted by population")
+
 lifeExp_pop %>% 
   ggplot(aes(x=year, y=global_avg_lifeExp)) + geom_line(size=1.5) +
-  ggtitle("Global life expectancy, 1952-2007", subtitle="weighted by population") +
-  ylab("average life expectancy")
+  ylab("average life expectancy") +
+  ggtitle("Global life expectancy, 1952-2007", subtitle="weighted by population")
 ```
 
 By contrast, here is a plot of mean global life expectancy weighted by country:
+
+### Figure 6
 
 ```{r}
 gapminder %>% 
   group_by(year) %>% 
   summarize(avg_lifeExp_c=mean(lifeExp)) %>% 
   ggplot(aes(x=year, y=avg_lifeExp_c))+geom_line(size=1.5) +
-  ggtitle("Global life expectancy weighted by country") +
-  ylab("average life expectancy")
+  ylab("average life expectancy") +
+  ggtitle("Global life expectancy weighted by country")
 ```
 
 We can see that the 'kink' around the early 1960s that was present on the first plot is smoothed out. This suggests that some countries had a population boom or drop in life expectancy around that time. 
 
 Let's further group our data by continent to track down that country/those countries:
 
+### Figure 7
+
 ```{r}
 lifeExp_cont <- gapminder %>% 
   group_by(year, continent) %>% 
   summarize(avg_lifeExp=weighted.mean(lifeExp, pop))
+
 datatable(lifeExp_cont, caption="Average life expectancy by continent")
+
 lifeExp_cont %>% 
-  ggplot(aes(x=year, y=avg_lifeExp, color=continent)) + geom_line(size=1.5) + theme_bw() +
-  ggtitle("Life expectation by continent", subtitle="weighted by population") +
-  ylab("average life expectancy")
+  ggplot(aes(x=year, y=avg_lifeExp, color=continent)) + 
+  geom_line(size=1.5) + 
+  theme_bw() +
+  ylab("average life expectancy") +
+  ggtitle("Life expectation by continent", subtitle="weighted by population")
 ```
 
 Based on this, it's likely that this occurred in some Asian country/countries. Read on to the next task, where we will continue our investigative work to speculate what may have happened!
 
 
 
-## Task Option 6
+## Task Option 6, Attempt 1
 
 *Find countries with interesting stories. Open-ended and, therefore, hard. Promising but unsuccessful attempts are encouraged. This will generate interesting questions to follow up on in class.*
 
-### Attempt 1
 
 Let's return to the plot from Task 4, where we found that the average life expectancy (weighted by population) stagnated around 1960 for Asia, suggesting a population boom and/or drop in life expectancy. The goal in this task will be to pinpoint the country or countries involved, and compare the data we unearth to historical events to see how well our conclusions hold up.
 
 Let's start by determining population growth per Asian country from the 1950s to 1960s, the time during which this trend is observed:
+
+### Figure 8
 
 ```{r}
 pop_growth <- gapminder %>% 
@@ -172,8 +196,8 @@ pop_growth <- gapminder %>%
   arrange(country, year) %>% 
   mutate(growth=pop-lag(pop)) %>% 
   drop_na() %>% 
-
   arrange(desc(growth)) 
+
 pop_growth %>% 
   select(country, year, pop, growth) %>% 
   datatable(caption="Population growth of Asian countries")
@@ -181,14 +205,21 @@ pop_growth %>%
 
 China and India led the board in population growth between 1955-1965. What are the life expectancy plots for the two countries during this timeframe?
 
+### Figure 9
+
 ```{r}
 pop_growth %>%
   filter(country %in% c("China", "India")) %>% 
-  ggplot(aes(x=year, y=lifeExp))+geom_line(aes(color=country), size=1.5) + theme_bw() +
-  ggtitle("Life expectancy, 1957-1967") + ylab("life expectancy")
+  ggplot(aes(x=year, y=lifeExp)) +
+  geom_line(aes(color=country), size=1.5) + 
+  theme_bw() +
+  ylab("life expectancy") +
+  ggtitle("Life expectancy, 1957-1967")
 ```
 
-The life expectancy for India increases, but China's actually decreases. It seems China is the country that warped the global trendline. In fact, here's the global data with China separated out:
+The life expectancy for India increases, but China's actually decreases. It seems we've found our country. In fact, here's the global data with China separated out:
+
+### Figure 10
 
 ```{r}
 gapminder %>% 
@@ -203,18 +234,25 @@ Without China's contribution to the global average, the shape of the trendline a
 
 Let's take a look at the spread of Asian population growth, normalized by percentage, over the 1950s and 1960s:
 
+### Figure 11
+
 ```{r}
 pop_growth %>% 
   mutate(percent=pop/(pop-growth)) %>% 
   ggplot(aes(x=percent, fill=country=="China"))+
-  geom_histogram(bins=50)+scale_x_continuous(labels=comma_format()) + theme_bw() +
-  ggtitle("Percent population growth of Asian countries", subtitle="1957-1967") + 
-  xlab("population growth (%)") + ylab("frequency") + scale_fill_discrete("", labels=c("Other countries", "China"))
+  geom_histogram(bins=50)+scale_x_continuous(labels=comma_format()) + 
+  theme_bw() +
+  xlab("population growth (%)") + 
+  ylab("frequency") + 
+  scale_fill_discrete("", labels=c("Other countries", "China")) +
+  ggtitle("Percent population growth of Asian countries", subtitle="1957-1967")
 ```
 
 Here we can see that China's population growth was actually fairly normal for a population of that size. Maybe even a little low.
 
 How does China's population growth and life expectancy look over 50 years?
+
+### Figure 12
 
 ```{r}
 china_data <- gapminder %>% 
@@ -222,39 +260,58 @@ china_data <- gapminder %>%
   arrange(year) %>% 
   mutate(growth=pop-lag(pop), percent=pop/(pop-growth)) %>% 
   drop_na()
+
 kable(china_data, caption="China's population growth, 1957-2007")
+
 china_data %>% 
-  ggplot(aes(x=percent,y=lifeExp,color=year)) + geom_path() + geom_point(size=2) +
-  ggtitle("Life expectancy vs. percent population growth of China", subtitle="1957-2007") + 
-  ylab("life expectancy") + xlab("population growth (%)")
+  ggplot(aes(x=percent,y=lifeExp,color=year)) + 
+  geom_path() + 
+  geom_point(size=2) +
+  ylab("life expectancy") + xlab("population growth (%)") +
+  ggtitle("Life expectancy vs. percent population growth of China", subtitle="1957-2007")
 ```
 
 It seems something drastic occurred between 1957 and 1962, and a second, less impactful event about a decade later. I already have a strong suspicion what happened during that time period, but let's continue our data exploration and see what else we can unearth.
 
 How did China's life expectancy change compared to other Asian countries during this time period?
 
+### Figure 13
+
 ```{r}
 pop_growth %>% 
   ggplot(aes(x=year, y=lifeExp, group=country, color=country=="China")) + 
-  geom_line(alpha=0.5, size=1.5) + theme_bw() +
-  ggtitle("Life expectancy, 1957-1967", subtitle="China vs global average") +
-  ylab("life expectancy") + scale_color_discrete("", labels=c("Global average", "China"))
+  geom_line(alpha=0.5, size=1.5) + 
+  theme_bw() +
+  ylab("life expectancy") + 
+  scale_color_discrete("", labels=c("Global average", "China")) +
+  ggtitle("Life expectancy, 1957-1967", subtitle="China vs global average")
 ```
 
 While other countries exhibited a steady increase in life expectancy, China's actually dropped during the early 1960s. 
 
 Finally, let's look at GDP per capita:
 
+### Figure 14
+
 ```{r}
 china_data %>% 
   ggplot(aes(x=gdpPercap,y=lifeExp, color=year)) + 
-  geom_path() + scale_x_log10() + scale_y_log10() + geom_point(size=2) +
-  ggtitle("Life expectancy vs GDP per capita of China") + ylab("life expectancy") + xlab("GDP per capita")
+  geom_path() + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  geom_point(size=2) +
+  ylab("life expectancy") + 
+  xlab("GDP per capita") +
+  ggtitle("Life expectancy vs GDP per capita of China")
 
 china_data %>% 
   ggplot(aes(y=percent,x=gdpPercap, color=year)) + 
-  geom_path() + scale_x_log10() + geom_point(size=2) +
-  ggtitle("Population growth vs GDP per capita") + ylab("population growth (%)") + xlab("GDP per capita")
+  geom_path() + 
+  scale_x_log10() + 
+  geom_point(size=2) +
+  ylab("population growth (%)") + 
+  xlab("GDP per capita") +
+  ggtitle("Population growth vs GDP per capita") 
 ```
 
 The data in all of these graphs points to the same conclusion: something happened around the 1960s that walloped China's population growth, life expectancy and GDP per capita.
@@ -265,25 +322,33 @@ There's another dip in population growth between 1972-1982. At the same time, we
 
 It's pretty amazing that the fallout of one country's history is visible on a global scale! Just how does China's population compare to the rest of the world's?
 
+### Figure 15
+
 ```{r}
 gapminder %>% 
   filter(year==1957) %>% 
   group_by(country=="China") %>% 
-  ggplot(aes(x="", y=pop, fill=country=="China")) + geom_bar(stat="identity") + coord_polar("y", start=0) +
-  scale_y_continuous(labels=NULL) + xlab("") + ylab("") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-  scale_color_discrete("", labels=c("Other countries", "China")) +
+  ggplot(aes(x="", y=pop, fill=country=="China")) + 
+  geom_bar(stat="identity") + 
+  coord_polar("y", start=0) +
+  scale_y_continuous(labels=NULL) + 
+  xlab("") + ylab("") + 
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  scale_fill_discrete("", labels=c("Other countries", "China")) +
   ggtitle("World population, China vs. other countries")
 ```
 
 In 1957, China constituted nearly a quarter of the world population. It's no wonder that these drastic changes left a mark in global data.
 
 
-### Attempt 2
+## Task Option 6, Attempt 2
 
 This section will be shorter as it showcases essentially the same steps as above.
 
 Let's change gears to GDP per capita again. Here is a plot of GDP per capita over the years, weighted by country instead of population:
+
+### Figure 16
 
 ```{r}
 gapminder %>% 
@@ -296,21 +361,28 @@ gapminder %>%
 
 We can see a spike in Asia's average GDP per capita, followed by a slight fall. Since the plot is weighted by country, we know it's likely one with a smaller population.
 
+### Figure 17
+
 ```{r}
 gdp_asia <- gapminder %>% 
   filter(continent=="Asia" & year>=1962 & year<=1987) %>% 
   arrange(pop)
+
 datatable(gdp_asia, caption="GDP per capita of Asian countries, 1962-1987")
+
 gdp_asia %>% 
   ggplot(aes(x=year,y=gdpPercap, group=country, color=country=="Kuwait")) + 
-  geom_line(size=1.5, alpha=1/3) + theme_bw() +
-  ggtitle("GDP per capita of Asian countries, 1967-1987") + ylab("GDP per capita") +
-  scale_color_discrete("", labels=c("Other countries", "Kuwait"))
+  geom_line(size=1.5, alpha=1/3) + 
+  theme_bw() +
+  scale_color_discrete("", labels=c("Other countries", "Kuwait")) +
+  ggtitle("GDP per capita of Asian countries, 1967-1987") + ylab("GDP per capita")
 ```
 
-The country contributing most to this trend seems to be Kuwait. However, an online search reveals the 1970s to be [Kuwait's golden era](https://en.wikipedia.org/wiki/History_of_Kuwait#Golden_era_(1946%E2%80%9382)), with immense growth due to oil in the 1970s. How to resolve this discrepancy? 
+So I cheated a little and referred back to my output from Task Option 2, and guessed that the country contributing most to this trend seems to be Kuwait. However, an online search reveals the 1970s to be [Kuwait's golden era](https://en.wikipedia.org/wiki/History_of_Kuwait#Golden_era_(1946%E2%80%9382)), with immense economic growth due to oil in the 1970s. How to resolve this discrepancy? 
 
 A closer look at the tibble above reveals another possible lead: population. Let's plot Kuwait's GDP per capita vs. population growth.
+
+### Figure 18
 
 ```{r}
 gdp_asia %>% 
@@ -318,8 +390,12 @@ gdp_asia %>%
   arrange(year) %>% 
   mutate(growth=(pop-lag(pop))/lag(pop)*100) %>% 
   drop_na() %>% 
-  ggplot(aes(x=growth,y=gdpPercap, group=country, color=year)) + geom_path() + geom_point(size=2) +
-  ggtitle("GDP per capita vs. population growth of Kuwait") + ylab("GDP per capita") + xlab("population growth (%)")
+  ggplot(aes(x=growth,y=gdpPercap, group=country, color=year)) + 
+  geom_path() + 
+  geom_point(size=2) +
+  ylab("GDP per capita") + 
+  xlab("population growth (%)") +
+  ggtitle("GDP per capita vs. population growth of Kuwait")
 ```
 
 This graph shows that at the same time that Kuwait's population growth slowed, its GDP per capita also decreased. This is contrary to my initial hypothesis that the population increased faster than GDP, leading to a decreased GDP per capita.
