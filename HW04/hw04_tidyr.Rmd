@@ -1,0 +1,101 @@
+---
+title: 'Assignment 04: Tidy data and joins'
+output: html_document
+---
+
+```{r}
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(knitr))
+```
+
+
+## Exercise 1: Univariate Data Reshaping (30%)
+
+Choose *EITHER* “Univariate Option 1” or “Univariate Option 2”. Both of these problems have three components:
+
+
+You are expected to use pivot_wider() and pivot_longer() for reshaping, and ggplot2 for the plot.
+
+Regarding the plot:
+
+    Don’t worry about plotting all of the data from the wide tibble.
+    The plot should be something that someone might actually want to produce in an analysis.
+
+Univariate Option 1
+
+    Make a tibble with one row per year, and columns for life expectancy for two or more countries.
+    Take advantage of this new data shape to scatterplot life expectancy for one country against that of another.
+    Re-lengthen the data.
+
+### Univariate Option 2
+    
+*Compute some measure of life expectancy (mean? median? min? max?) for all possible combinations of continent and year. Reshape that to have one row per year and one variable for each continent. Or the other way around: one row per continent and one variable per year.*
+
+```{r}
+avgContYear <- gapminder %>% 
+  group_by(continent, year) %>% 
+  summarize(avgLifeExp=weighted.mean(lifeExp, pop)) %>% 
+  pivot_wider(id_cols=year,
+            names_from=continent,
+            values_from=avgLifeExp)
+lable(avgContYear)
+```
+
+*Is there a plot that is easier to make with the data in this shape versis the usual form? Try making such a plot!*
+
+It is easier to plot continents against each other without using a Boolean, so if you want to add or take away continents on the fly you don't have to re-wrangle everything (???). It also becomes easier to control the color palette being used.
+
+```{r}
+avgContYear %>% 
+  ggplot(aes(x=year)) +
+  geom_line(aes(y=Africa), color="red") +
+  geom_line(aes(y=Americas), color="blue") +
+  geom_line(aes(y=Oceania), color="orange")
+```
+
+*Re-lengthen the data.*
+
+```{r}
+avgContYear %>% 
+  pivot_longer(cols= -year,
+               names_to="continent",
+               values_to="avgLifeExp") %>% 
+  datatable()
+```
+
+
+## Exercise 2: Multivariate Data Reshaping (30%)
+
+Choose *EITHER* “Multivariate Option 1” or “Multivariate Option 2”. All of these problems have two components:
+
+Don’t worry about producing a plot here. You are expected to use pivot_wider() and pivot_longer() for reshaping.
+
+###Multivariate Option 1
+
+    Make a tibble with one row per year, and columns for life expectancy and GDP per capita (or two other numeric variables) for two or more countries.
+    Re-lengthen the data.
+    
+```{r}
+multiwide <- gapminder %>% 
+  filter(country %in% c("Burundi", "New Zealand", "Switzerland")) %>% 
+  pivot_wider(id_cols=year,
+              names_from=country,
+              values_from=c(lifeExp, pop))
+
+kable(multiwide)
+multiwide %>% 
+  pivot_longer(cols= -year,
+               names_to=c(".value", "country"),
+               names_sep="_") %>% 
+  datatable()
+```
+
+
+Multivariate Option 2
+
+    Compute some measure of life expectancy and GDP per capita (or two other numeric variables) (mean? median? min? max?) for all possible combinations of continent and year. Reshape that to have one row per year and one variable for each continent-measurement combination. Or the other way around: one row per continent and one variable for each year-measurement combination.
+    Re-lengthen the data.
+
