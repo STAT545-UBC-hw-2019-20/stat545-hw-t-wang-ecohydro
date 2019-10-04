@@ -12,27 +12,14 @@ suppressPackageStartupMessages(library(knitr))
 ```
 
 
-## Exercise 1: Univariate Data Reshaping (30%)
+## Exercise 1: Univariate Data Reshaping
 
-Choose *EITHER* “Univariate Option 1” or “Univariate Option 2”. Both of these problems have three components:
-
-
-You are expected to use pivot_wider() and pivot_longer() for reshaping, and ggplot2 for the plot.
-
-Regarding the plot:
-
-    Don’t worry about plotting all of the data from the wide tibble.
-    The plot should be something that someone might actually want to produce in an analysis.
-
-Univariate Option 1
-
-    Make a tibble with one row per year, and columns for life expectancy for two or more countries.
-    Take advantage of this new data shape to scatterplot life expectancy for one country against that of another.
-    Re-lengthen the data.
 
 ### Univariate Option 2
-    
+
 *Compute some measure of life expectancy (mean? median? min? max?) for all possible combinations of continent and year. Reshape that to have one row per year and one variable for each continent. Or the other way around: one row per continent and one variable per year.*
+
+I have chosen to compute a weighted mean (by population) of life expectancy for each continent.
 
 ```{r}
 avgContYear <- gapminder %>% 
@@ -41,12 +28,14 @@ avgContYear <- gapminder %>%
   pivot_wider(id_cols=year,
             names_from=continent,
             values_from=avgLifeExp)
-lable(avgContYear)
+kable(avgContYear)
 ```
 
 *Is there a plot that is easier to make with the data in this shape versis the usual form? Try making such a plot!*
 
-It is easier to plot continents against each other without using a Boolean, so if you want to add or take away continents on the fly you don't have to re-wrangle everything (???). It also becomes easier to control the color palette being used.
+It is easier to plot certain variables (in this case, continents) against each other without using a Boolean. If you want to add or take away continents on the fly you don't have to re-wrangle everything. 
+
+It also becomes easier to control the colors that are used. When using `aes(color = continent)` in my previous assignments I noticed its default color palette had colors that were too similar to each other on my screen.
 
 ```{r}
 avgContYear %>% 
@@ -67,16 +56,15 @@ avgContYear %>%
 ```
 
 
-## Exercise 2: Multivariate Data Reshaping (30%)
 
-Choose *EITHER* “Multivariate Option 1” or “Multivariate Option 2”. All of these problems have two components:
+## Exercise 2: Multivariate Data Reshaping
 
-Don’t worry about producing a plot here. You are expected to use pivot_wider() and pivot_longer() for reshaping.
 
-###Multivariate Option 1
+### Multivariate Option 1
 
-    Make a tibble with one row per year, and columns for life expectancy and GDP per capita (or two other numeric variables) for two or more countries.
-    Re-lengthen the data.
+*Make a tibble with one row per year, and columns for life expectancy and GDP per capita (or two other numeric variables) for two or more countries.*
+
+*Re-lengthen the data.*
     
 ```{r}
 multiwide <- gapminder %>% 
@@ -86,6 +74,7 @@ multiwide <- gapminder %>%
               values_from=c(lifeExp, pop))
 
 kable(multiwide)
+
 multiwide %>% 
   pivot_longer(cols= -year,
                names_to=c(".value", "country"),
@@ -94,59 +83,68 @@ multiwide %>%
 ```
 
 
-Multivariate Option 2
-
-    Compute some measure of life expectancy and GDP per capita (or two other numeric variables) (mean? median? min? max?) for all possible combinations of continent and year. Reshape that to have one row per year and one variable for each continent-measurement combination. Or the other way around: one row per continent and one variable for each year-measurement combination.
-    Re-lengthen the data.
-
 
 ## Exercise 3: Table Joins (30%)
 
-Do *ALL* of the activities in this section.
-
-Read in the made-up wedding guestlist and email addresses using the following lines (go ahead and copy-paste these):
+*Read in the made-up wedding guestlist and email addresses using the following lines:*
 
 ```{r warning=FALSE}
-guest <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/attend.csv")
-email <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/emails.csv")
+suppressMessages(guest <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/attend.csv"))
+suppressMessages(email <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/emails.csv"))
 ```
 
-Then, complete the following tasks using the tidyverse (tidyr, dplyr, …). No need to do any pivoting – feel free to leave guest in its current format.
 
 ### 3.1 
 
-For each guest in the guestlist (guest tibble), add a column for email address, which can be found in the email tibble.
+*For each guest in the guestlist (guest tibble), add a column for email address, which can be found in the email tibble.*
 
 ```{r}
 email_sep <- email %>% 
   separate_rows(guest, sep=", ")
 
 guest %>% 
-#  rename(guest=name) %>% 
-  left_join(email_sep, by=c("name"="guest"))
+  left_join(email_sep, by=c("name"="guest")) %>% 
+  datatable()
 ```
 
 
 ### 3.2 
 
-Who do we have emails for, yet are not on the guestlist?
+*Who do we have emails for, yet are not on the guestlist?*
 
 ```{r}
 email_sep %>% 
-  anti_join(guest, by=c("guest"="name"))
+  anti_join(guest, by=c("guest"="name")) %>% 
+  kable()
 ```
 
+Turner Jones, Albert Marshall, and Vivian Marshall weren't invited to the wedding. :(
 
-### 3.3 (10%)
+### 3.3
 
-Make a guestlist that includes everyone we have emails for (in addition to those on the original guestlist).
+*Make a guestlist that includes everyone we have emails for (in addition to those on the original guestlist).*
 
 ```{r}
-guest %>% 
-  full_join(email_sep, by=c("name"="guest"))
+# waiting on issue on GitHub to be addressed
+# depending on what exactly is required, one of the solutions below:
 
+# full dataset, guest + emails like 3.1
+guest %>% 
+  full_join(email_sep, by=c("name"="guest")) %>% 
+  datatable()
+
+#same format as guest
+guest %>% 
+  full_join(email_sep %>% 
+              select(guest)
+            , by=c("name"="guest")) %>% 
+  datatable()
+
+
+# only guest names
 guest %>% 
   select(guest=name) %>% 
-  union(select(email_sep, guest))
+  union(select(email_sep, guest)) %>% 
+  datatable()
 ```
 
