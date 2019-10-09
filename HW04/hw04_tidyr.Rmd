@@ -31,18 +31,15 @@ avgContYear <- gapminder %>%
 kable(avgContYear)
 ```
 
-*Is there a plot that is easier to make with the data in this shape versis the usual form? Try making such a plot!*
+*Is there a plot that is easier to make with the data in this shape versus the usual form? Try making such a plot!*
 
-It is easier to plot certain variables (in this case, continents) against each other without using a Boolean. If you want to add or take away continents on the fly you don't have to re-wrangle everything. 
-
-It also becomes easier to control the colors that are used. When using `aes(color = continent)` in my previous assignments I noticed its default color palette had colors that were too similar to each other on my screen.
+It is easier to plot the values of variables of the same type against each other, such as in the example shown below, where the life expectancy of Europe is plotted against that of Africa. Both are continents (therefore same type). We can use this type of graph to understand how properties evolved alongside one another.
 
 ```{r}
 avgContYear %>% 
-  ggplot(aes(x=year)) +
-  geom_line(aes(y=Africa), color="red") +
-  geom_line(aes(y=Americas), color="blue") +
-  geom_line(aes(y=Oceania), color="orange")
+  ggplot(aes(x=Africa, y=Europe)) +
+  geom_point() +
+  ggtitle("Life Expectancy, Africa vs. Europe")
 ```
 
 *Re-lengthen the data.*
@@ -124,11 +121,11 @@ Turner Jones, Albert Marshall, and Vivian Marshall weren't invited to the weddin
 
 *Make a guestlist that includes everyone we have emails for (in addition to those on the original guestlist).*
 
-```{r}
-# waiting on issue on GitHub to be addressed
-# depending on what exactly is required, one of the solutions below:
+There were three solutions I came up with, based on what data you'd want to keep in the guestlist.
 
-# full dataset, guest + emails like 3.1
+```{r}
+
+# full dataset, guest + emails like in 3.1
 guest %>% 
   full_join(email_sep, by=c("name"="guest")) %>% 
   datatable()
