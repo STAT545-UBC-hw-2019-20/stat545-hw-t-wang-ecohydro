@@ -133,8 +133,8 @@ guest %>%
 #same format as guest
 guest %>% 
   full_join(email_sep %>% 
-              select(guest)
-            , by=c("name"="guest")) %>% 
+              select(guest), 
+            by=c("name"="guest")) %>% 
   datatable()
 
 
