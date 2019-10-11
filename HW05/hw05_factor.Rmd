@@ -1,0 +1,122 @@
+---
+title: 'Exercise 5: Factor and figure management'
+author: "Tracy Wang"
+date: "10/11/2019"
+output: html_document
+---
+
+Data
+
+You can work with the gapminder data, or adapt the tasks to suit some other data set, such as Joey’s singer dataset.
+
+## Exercise 1: Explain the value of the here::here package
+
+*Read through the blog post by Malcolm Barrett where he outlines why one should use the here::here package in RStudio projects.*
+
+*Task: In your own words, summarize the value of the here::here package in 250 words or fewer.*
+
+The `here::here` package is useful for setting relative paths for the working directory of your project, especially when said project is shared among multiple users. 
+
+- Not all users' local directories will have the same structure; if one were to set the working directory using `setwd()` then the working directory would have to be changed every time a different local computer was used. 
+- Different operating systems use different notations to separate folders. For example, Mac computers do/it/this/way whereas Windows OS does\things\another\way. Whenever the project gets accessed from a different OS, the user would have to replace the slashes with backslashes, or vice versa. 
+- This process is tedious and time-consuming to have to repeat all the time. And just imagine if you make a typo...
+
+# 126 WORDS
+
+How it works
+- Typically, your project and all its associated files will be stored in a folder.
+- `here()` looks for
+
+# 148 WORDS
+
+
+## Exercise 2: Factor management
+
+*Task: Choose one dataset (of your choice) and a variable to explore. After ensuring the variable(s) you’re exploring are indeed factors, you should:*
+
+- *Drop factor / levels;*
+- *Reorder levels based on knowledge from data.*
+
+*We’ve elaborated on these steps for the gapminder and singer data sets below.*
+
+Explore the effects of re-leveling a factor in a tibble by:
+
+    comparing the results of arrange on the original and re-leveled factor.
+    Plotting a figure of before/after re-leveling the factor (make sure to assign the factor to an aesthetic of your choosing).
+
+These explorations should involve the data, the factor levels, and at least two figures (before and after.
+Elaboration for the gapminder data set
+
+Drop Oceania. Filter the Gapminder data to remove observations associated with the continent of Oceania. Additionally, remove unused factor levels. Provide concrete information on the data before and after removing these rows and Oceania; address the number of rows and the levels of the affected factors.
+
+Reorder the levels of country or continent. Use the forcats package to change the order of the factor levels, based on summarized information of one of the quantitative variables. Consider experimenting with a summary statistic beyond the most basic choice of the mean/median. Use the forcats package in the tidyverse for this, rather than the baseR function as.factor.
+Elaboration for the Singer data set
+
+If necessary, transform some of the variables in the singer_locations dataframe into factors: pay attention at what levels you introduce and their order.
+
+Drop 0. Filter the singer_locations data to remove observations associated with the uncorrectly inputed year 0. Additionally, remove unused factor levels. Provide concrete information on the data before and after removing these rows and levels; address the number of rows and the levels of the affected factors.
+
+Reorder the levels of year, artist_name or title. Use the forcats package to change the order of the factor levels, based on a principled summary of one of the quantitative variables. Consider experimenting with a summary statistic beyond the most basic choice of the median.
+
+## Exercise 3: File input/output (I/O) (20%)
+
+Rubric:
+
+    10%: Accuracy
+    10%: Code quality
+
+Task: Experiment with at least one of:
+
+    write_csv()/read_csv() (and/or TSV friends),
+    saveRDS()/readRDS(),
+    dput()/dget().
+
+You are expected to create something new, probably by filtering or grouped-summarization of your dataset (for e.g., Singer, Gapminder, or another dataset), export it to disk and then reload it back in using one of the packages above. You should use here::here() for reading in and writing out.
+
+With the imported data, play around with factor levels and use factors to order your data with one of your factors (i.e. non-alphabetically). For the I/O method(s) you chose, comment on whether or not your newly created file survived the round trip of writing to file then reading back in.
+
+## Exercise 4: Visualization design (20%)
+
+Rubric:
+
+    5%: Writing
+    5%: Accuracy
+    10%: Vis quality
+
+Go back through your previous assignments and class participation activities and find figures you created prior to the last week of the course. Recreate at least one figure in light of something you learned in the recent class meetings about visualization design and color.
+
+Task: Create a side-by-side plot and juxtapose your first attempt (show the original figure as-is) with a revised attempt after some time spent working on it and implementing principles of effective plotting principles. Comment and reflect on the differences.
+
+## Exercise 5: Writing figures to file (10%)
+
+    5%: Accuracy
+    5%: Code quality
+
+Task: Use ggsave() to explicitly save a plot to file. Include the exported plot as part of your repository and assignment.
+
+Then, use ![Alt text](/path/to/img.png) to load and embed that file into your report. You can play around with various options, such as:
+
+    Arguments of ggsave(), such as width, height, resolution or text scaling.
+    Various graphics devices, e.g. a vector vs. raster format.
+    Explicit provision of the plot object p via ggsave(..., plot = p). Show a situation in which this actually matters.
+
+
+
+
+(Optional, ungraded) Exercise 6: But I want to do more!
+
+If you’re particularly keen on levelling up the challenge of this assignment, try these things (this is all optional, and will not be graded):
+
+Make a deeper exploration of the forcats packages, i.e. try more of the factor level reordering functions.
+
+Revalue a factor, e.g.:
+
+    Gapminder version: Pick a handful of countries, each of which you can associate with a stereotypical food (or any other non-controversial thing … sport? hobby? type of music, art or dance? animal? landscape feature?). Create an excerpt of the Gapminder data, filtered to just these countries. Create a new factor – you pick the name! – by mapping the existing country factor levels to the new levels.
+        Examples: Italy –> wine, Germany –> beer, Japan –> sake. (Austria, Germany) –> German, (Mexico, Spain) –> Spanish, (Portugal, Brazil) –> Portuguese. Let your creativity flourish.
+    Singer version: Pick a handful of locations (they are named city, try using distinct()) that you can pinpoint to a geographical place (city, region, country, continent,…). Create an excerpt of the Singer data, filtered to just those rows. Create a (couple of) new factor(s) – you pick the name(s)! – by mapping the existing city factor levels to the new (city, region, country…) levels.
+        Examples: “London, England” –> “London”, “England”, “UK”, “Europe”;
+        “Los Angeles, CA” –> “Los Angeles”, “California”, “USA”, “Americas”;
+        …
+        “310, Louisiana” –> “New Orleans”, “Louisiana”, “USA”, “Americas”.
+
+You could even try to make this process of geolocalization more streamlined: you may want to try and use the separate function from tidyr.
