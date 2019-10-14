@@ -2,12 +2,13 @@
 title: 'Exercise 5: Factor and figure management'
 author: "Tracy Wang"
 date: "10/11/2019"
-output: html_document
+output: 
+    html_document:
+        toc: true
+        foc_float: true
 ---
 
 ## Exercise 1: Explain the value of the here::here package
-
-*Read through the blog post by Malcolm Barrett where he outlines why one should use the here::here package in RStudio projects.*
 
 *Task: In your own words, summarize the value of the here::here package in 250 words or fewer.*
 
@@ -32,12 +33,12 @@ library(knitr)
 
 ## Exercise 2: Factor management
 
+I have chosen to use the **Singer** dataset.
+
 *Task: Choose one dataset (of your choice) and a variable to explore. After ensuring the variable(s) you’re exploring are indeed factors, you should:*
 
 - *Drop factor / levels;*
 - *Reorder levels based on knowledge from data.*
-
-*We’ve elaborated on these steps for the gapminder and singer data sets below.*
 
 *Explore the effects of re-leveling a factor in a tibble by:*
 
@@ -46,11 +47,7 @@ library(knitr)
 
 *These explorations should involve the data, the factor levels, and at least two figures (before and after).*
 
-I have chosen to use the Singer dataset.
-
 *__Elaboration for the Singer data set__*
-
-*If necessary, transform some of the variables in the singer_locations dataframe into factors: pay attention at what levels you introduce and their order.*
 
 *Drop 0. Filter the singer_locations data to remove observations associated with the uncorrectly inputed year 0. Additionally, remove unused factor levels. Provide concrete information on the data before and after removing these rows and levels; address the number of rows and the levels of the affected factors.*
 
@@ -105,7 +102,7 @@ Now that the level 0 is dropped, `year` has 69 levels total. The number of entri
 
 ### Re-order levels (by year)
 
-To simplify our plot, let's recategorize years into decades.
+To simplify our plot, let's categorize years into decades.
 
 ```{r}
 (singer_fct <- singer_locations %>% 
@@ -127,10 +124,11 @@ singer_fct$decade %>%
 
 There are 10 levels in the `decade` factor. 
 
-On to some graphs!
+#### Plotting
+
+The following is a box plot of song durations by decade, in chronological order.
 
 ```{r}
-# Box plot of song durations by decade
 singer_fct %>%     
     ggplot() + 
     geom_boxplot(aes(x=decade, y=duration))
@@ -138,49 +136,54 @@ singer_fct %>%
 
 We can see that the durations of songs varies greatly, with some of the longest songs being around 2000 seconds.
 
-Here is the number of songs listed for each decade:
+```{r}
+singer_fct %>%     
+    ggplot() + 
+    geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration))
+```
+
+
+Here is a bar graph of the number of songs listed for each decade:
 
 ```{r}
-# Number of songs in each decade, default arrangement
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(decade)) + 
     scale_x_discrete(drop=FALSE) +
     scale_y_log10() 
-```
 
-By default, the levels happen to be arranged in chronological order. 
-
-Note that a single instance of 1930s music does exist in this dataframe, but ggplot got upset about forcing the y-axis to start at 0 using `expand_limits()`. A linear y-axis scale will be used for subsequent plots.
-
-```{r}
 singer_fct %>% 
     count(decade) %>% 
     kable()
 ```
 
-The follow bar graph shows the same info, but arranged in order of most to fewest songs listed per decade.
+By default, the levels happen to be arranged in chronological order. 
+
+Note that a single instance of 1930s music does exist in this dataframe, but ggplot got upset about my attempt to use `expand_limits()` to force the y-axis to start at 0. 
+
+The next graph shows the same info, but arranged in order of most to fewest songs listed per decade.
 
 ```{r}
-# Number of songs in each decade, arranged by count
 singer_fct %>% 
     ggplot() +
-    geom_bar(aes(fct_rev(fct_infreq(decade)))) +
-    coord_flip()
+    geom_bar(aes(fct_infreq(decade))) +
+    scale_y_log10()
 ```
 
-Let's order the song count by maximum duration per decade, starting with the longest:
+A linear y-axis scale will be used for subsequent plots.
+
+Let's order the song count by maximum duration per decade, starting with the longest. At the same time, we can confirm our observations of the graph with the tabulated version of the data.
 
 ```{r}
-# Number of songs in each decade, arranged by maximum song duration for that decade (ascending).
+
+singer_fct %>% 
+    ggplot() +
+    geom_bar(aes(decade))
+
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(fct_rev(fct_reorder(decade, duration, max))))
-```
 
-This corresponds with the tabulated data below.
-
-```{r}
 singer_fct %>% 
     group_by(decade) %>% 
     summarize(longest=max(duration)) %>% 
@@ -198,68 +201,74 @@ singer_fct %>%
 - *saveRDS()/readRDS(),*
 - *dput()/dget().*
 
-*You are expected to create something new, probably by filtering or grouped-summarization of your dataset (for e.g., Singer, Gapminder, or another dataset), export it to disk and then reload it back in using one of the packages above. You should use here::here() for reading in and writing out.*
-
-*With the imported data, play around with factor levels and use factors to order your data with one of your factors (i.e. non-alphabetically). For the I/O method(s) you chose, comment on whether or not your newly created file survived the round trip of writing to file then reading back in.*
+### write_csv()/read_csv()
 
 Let's write our factored singer_locations dataframe from Exercise 2 to file. We'll keep only songs from the 1990s to trim down the dataframe size a little.
 
 ```{r}
 library(here)
+
+# set_here() was previously called to create a .here file in the HW05 folder.
+
 dr_here()
 
 (singer_out <- singer_fct %>% 
     filter(decade == "1990s"))
 
-write_csv(singer_out, here::here("HW05", "singer_fct.csv"))
+write_csv(singer_out, here::here("singer_fct.csv"))
 
 ```
 
 ```{r load_csv, warning=FALSE}
-(singer_load <- read_csv(here::here("HW05", "singer_fct.csv")))
+(singer_load <- read_csv(here::here("singer_fct.csv")))
 
 ```
 
-We can see that our `decade` column is parsed as character class instead of factor.
+We can see that our `decade` column is parsed as a character class instead of factor.
+
+Now that we only have 10 years' worth of songs to work with, let's arrange them in ascending order of frequency from top to bottom.
 
 ```{r}
-singer_load %>% 
+(E3_plot <- singer_load %>% 
     mutate(year=as_factor(year)) %>% 
-    ggplot() + geom_bar(aes(fct_infreq(year)))
+    ggplot() + geom_bar(aes(fct_infreq(year))) +
+    coord_flip())
 ```
 
+### dput()/dget()
 
+I will try the same exercise with `dput()`/`dget()`.
 
 ```{r}
-dput(singer_out, file = here::here("HW05", "singer_fct_d.csv"),
+dput(singer_out, file = here::here("singer_fct_d.csv"),
      control = c("keepNA", "keepInteger", "niceNames", "showAttributes"))
-
 ```
 
-The file has been successfully written but the format is different than `write_csv()`'s output. If we try and retrieve the file using `read_csv()`...
+The file has been successfully written, but the format of the table is different than `write_csv()`'s output, which I confirmed by opening the .csv files using Excel. Trying to use `read_csv()` on the `dput()` output caused a myriad of parsing errors.
 
 ```{r}
-
-read_csv(here::here("HW05", "singer_fct_d.csv"))
-
-```
-
-Whoops, a lot of parsing errors occurred!
-
-```{r}
-
-dget(here::here("HW05", "singer_fct_d.csv"), keep.source = TRUE)
+(singer_get <- dget(here::here("singer_fct_d.csv"), keep.source = TRUE))
 ```
 
 In this case, the factor class of `decade` actually made it through the wringer. When the file is retrieved and parsed, it's still a factor. 
 
+Enough messing around with `decade`--how about using another factor? 
+
+In the code below, I extracted the first character from the `artist_name` column. The box plot describes the spread of artist familiarity for artists whose names begin with a certain letter (or number), in order from greatest maximum familiarity to least.
+
 ```{r}
-(singer_first <- singer_load %>% 
+singer_first <- singer_get %>% 
     drop_na() %>% 
-    group_by(firstletter = as_factor(substr(name, 1, 1))))
+    group_by(firstletter = as_factor(substr(artist_name, 1, 1)))
 
 singer_first %>% 
-    ggplot() + geom_boxplot(aes(x=firstletter, y=artist_familiarity))
+    count() %>% 
+    datatable()
+
+singer_first %>% 
+    ggplot() + geom_boxplot(aes(
+        x=fct_rev(fct_reorder(firstletter, artist_familiarity, max)), 
+        y=artist_familiarity))
 ```
 
 
@@ -272,16 +281,35 @@ singer_first %>%
 
 
 
-## Exercise 5: Writing figures to file (10%)
+## Exercise 5: Writing figures to file
 
-Task: Use ggsave() to explicitly save a plot to file. Include the exported plot as part of your repository and assignment.
+*Task: Use ggsave() to explicitly save a plot to file. Include the exported plot as part of your repository and assignment.*
 
-Then, use ![Alt text](/path/to/img.png) to load and embed that file into your report. You can play around with various options, such as:
-
-    Arguments of ggsave(), such as width, height, resolution or text scaling.
-    Various graphics devices, e.g. a vector vs. raster format.
-    Explicit provision of the plot object p via ggsave(..., plot = p). Show a situation in which this actually matters.
+*Then, use `![Alt text](/path/to/img.png)` to load and embed that file into your report.* 
     
+By default, `ggsave()` renders the last plot item to file. At the time of this writing, that would be the artist familiarity box plot in Exercise 3. The image is named "firstletter_boxplot" for this reason. However, once I complete Exercise 4, I expect that this image will contain something other than the aforementioned box plot...
+    
+```{r}
+ggsave("firstletter_boxplot.png")
+```
+
+Having saved the image, I can then embed it like so...
+
+![Fig. 1: Last plotted data](firstletter_boxplot.png)
+
+
+And now, writing this after completing Exercise 4, ...
+
+Here's another one, with some parameters changed this time.
+
+```{r}
+ggsave("90s_bargraph.png", plot = E3_plot, dpi = 100, units = "mm", width = 50, height = 30)
+```
+    
+![Fig. 2: Bar graph from Exercise 3, shrunken and made low-res](90s_bargraph.png)
+    
+The text is huge because it needs to be changed for the plot object itself (i.e. `ggsave()` only shrunk the plot area itself). 
+
 <!--- Old code, rejected for tedious repetition
 ```{r}
 singer_fct <- singer_locations %>% 
