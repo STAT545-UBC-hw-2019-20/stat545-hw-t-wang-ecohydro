@@ -8,6 +8,15 @@ output:
         toc_float: true
 ---
 
+<style type="text/css">
+.twoC {width: 100%}
+.clearer {clear: both}
+.twoC .table {max-width: 50%; float: right}
+.twoC img {max-width: 50%; float: left}
+</style>
+
+<div class="clearer">
+
 ```{r startup}
 suppressPackageStartupMessages(library(singer))
 suppressPackageStartupMessages(library(tidyverse))
@@ -108,65 +117,106 @@ To simplify our plot, let's categorize years into decades.
 
 singer_fct$decade %>% 
     nlevels()
-
 ```
 
 There are 10 levels in the `decade` factor. 
 
+
+
 #### Plotting
 
-The following is a box plot of song durations by decade, in chronological order.
+The following is a box plot of song durations by decade, in chronological order. We can see that the durations of songs varies greatly, with some of the longest songs being around 2000 seconds. The plot on the right organizes the decades in order of greatest to smallest maximum duration (per decade).
 
-```{r}
+```{r boxplots, eval=FALSE}
 singer_fct %>%     
     ggplot() + 
     geom_boxplot(aes(x=decade, y=duration)) +
     theme_bw() +
-    ylab("duration (s)") +
+    ylab("duration (s)") + 
     ggtitle("Singer_location songs")
+
+singer_fct %>%     
+    ggplot() + 
+    geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration)) +
+    theme_bw() + 
+    ylab("duration (s)") + xlab("decade") +
+    ggtitle("Maximum duration of singer_location songs")
 ```
 
-We can see that the durations of songs varies greatly, with some of the longest songs being around 2000 seconds. We can organise the decades in order of greatest to smallest maximum duration (per decade).
+</div>
 
-```{r}
+<div class = "twoC">
+
+```{r boxplot_run, echo=FALSE}
+singer_fct %>%     
+    ggplot() + 
+    geom_boxplot(aes(x=decade, y=duration)) +
+    theme_bw() +
+    ylab("duration (s)") + 
+    ggtitle("Singer_location songs")
+
 singer_fct %>%     
     ggplot() + 
     geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration)) +
     theme_bw() +
-    ylab("duration (s)") +
+    ylab("duration (s)") + xlab("decade") +
     ggtitle("Maximum duration of singer_location songs")
 ```
 
-Here are two bar graphs of the number of songs listed for each decade. The second graph has been reordered by number of entries per decade.
+</div>
+
+Here is a table and two bar graphs of the number of songs listed for each decade. The second graph has been reordered by number of entries per decade.
 
 ```{r}
 singer_fct %>% 
     group_by(decade) %>% 
     count() %>% 
     kable()
+```
 
+```{r bargraphs, eval=FALSE}
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(decade)) + 
     coord_flip() +
-    theme_bw() +
+    theme_bw() + 
     xlab("decade") + ylab("number of entries") +
     ggtitle("Singer_location song entries")
-
 
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(fct_infreq(decade))) +
     coord_flip() +
-    theme_bw() +
+    theme_bw() + theme(axis.text.x = element_text(size = 8)) +
     xlab("decade") + ylab("number of entries") +
     ggtitle("Singer_location song entries")
 ```
 
+<div class = "twoC">
+
+```{r bargraphs_run, echo=FALSE}
+singer_fct %>% 
+    ggplot() +
+    geom_bar(aes(decade)) + 
+    coord_flip() +
+    theme_bw() + 
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_location song entries")
+
+singer_fct %>% 
+    ggplot() +
+    geom_bar(aes(fct_infreq(decade))) +
+    coord_flip() +
+    theme_bw() + 
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_location song entries")
+```
+
+</div>
+
 Building off the above bar graphs, let's order the song count by maximum duration per decade, starting with the longest at the top. At the same time, we can confirm our observations of the graph with the tabulated version of the data.
 
-```{r}
-
+```{r barandtable, eval=FALSE}
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(fct_reorder(decade, duration, max))) +
@@ -181,8 +231,28 @@ singer_fct %>%
     summarize(longest=max(duration)) %>% 
     arrange(desc(longest)) %>% 
     kable()
+
 ```
 
+<div class="twoC">
+
+```{r barandtable_run, echo=FALSE, fig.height=5}
+singer_fct %>% 
+    group_by(decade) %>% 
+    summarize(longest=max(duration)) %>% 
+    arrange(desc(longest)) %>% 
+    kable()
+
+singer_fct %>% 
+    ggplot() +
+    geom_bar(aes(fct_reorder(decade, duration, max))) +
+    coord_flip() +
+    theme_bw() +
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_locations song entries (descending order of maximum duration)")
+```
+
+</div>
 
 
 ## Exercise 3: File input/output (I/O)
@@ -248,7 +318,7 @@ In this case, the factor class of `decade` actually made it through the wringer.
 
 For my last attempt at factor play, I extracted the first character from the `artist_name` column. The box plot describes the spread of artist familiarity for artists whose names begin with a certain letter (or number), in order from greatest maximum familiarity to least.
 
-```{r}
+```{r }
 singer_first <- singer_get %>% 
     drop_na() %>% 
     group_by(firstletter = as_factor(substr(artist_name, 1, 1)))
@@ -256,7 +326,9 @@ singer_first <- singer_get %>%
 singer_first %>% 
     count() %>% 
     datatable()
+```
 
+```{r artists, eval=FALSE}
 singer_first %>% 
     ggplot() + geom_boxplot(aes(x=firstletter, y=artist_familiarity)) +
     theme_bw() +
@@ -271,6 +343,26 @@ singer_first %>%
     xlab("first letter of artist name") + ylab("artist familiarity") +
     ggtitle("Singer_locations '90s song artists (reordered)")
 ```
+
+<div class = "twoC">
+
+```{r artists_run, echo=FALSE}
+singer_first %>% 
+    ggplot() + geom_boxplot(aes(x=firstletter, y=artist_familiarity)) +
+    theme_bw() +
+    xlab("first letter of artist name") + ylab("artist familiarity") +
+    ggtitle("Singer_locations '90s song artists")
+
+singer_first %>% 
+    ggplot() + geom_boxplot(aes(
+        x=fct_rev(fct_reorder(firstletter, artist_familiarity, max)), 
+        y=artist_familiarity)) +
+    theme_bw() +
+    xlab("first letter of artist name") + ylab("artist familiarity") +
+    ggtitle("Singer_locations '90s song artists (reordered)")
+```
+
+</div>
 
 
 
@@ -315,6 +407,35 @@ gapminder %>%
 
 ```
 
+Side by side comparison:
+
+<div class = "twoC">
+
+```{r sidebyside, echo=FALSE}
+gapminder %>% 
+  group_by(continent, year) %>% 
+  summarize(avggdp=mean(gdpPercap)) %>% 
+  ggplot(aes(x=year, y=avggdp, color=continent)) + geom_line(size=1.5) + theme_bw() +
+  ggtitle("Average GDP per capita, 1952-2007", subtitle="weighted by country") +
+  ylab("average GDP per capita")
+
+gapminder %>% 
+    group_by(continent, year) %>% 
+    summarize(avggdp=mean(gdpPercap)) %>% 
+    ggplot(aes(x=year, y=avggdp, color=continent)) + 
+    geom_line(size=1.5) + 
+    theme_bw() +
+    theme(panel.border = element_blank(), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "grey")) +
+    scale_color_manual(values = c("purple", "#2DB425", "#FC4E07", "#FED51C", "blue")) +
+    xlab("") + ylab("USD") +
+    ggtitle("Worldwide average GDP per capita increase")
+```
+
+</div>
+
 The major difference of the new edition is that the line colors are easier to distinguish. There's less visual clutter. I removed as many of the redundancies as I could, such as stating the years over which the data spanned in the title, and even the x-axis label. For units on the y-axis, I took a guess that the GDP per capita values were in USD, but essentially whatever currency the numbers are in should go there.
 
 The new graph looks a lot more minimalistic, which helps get its point across much more efficiently.
@@ -347,7 +468,7 @@ ggsave("90s_bargraph.png", plot = E3_plot, dpi = 100, units = "mm", width = 50, 
     
 ![Fig. 2: Bar graph from Exercise 3, shrunken and made low-res](90s_bargraph.png)
     
-The text doesn't change size with the plot; that needs to be changed explicitly when creating the plot, using `theme(axis.text = element_text(size = [some_number_here]))`.
+The text doesn't change size with the plot; that needs to be changed explicitly when creating the plot.
 
 <!--- Old code, rejected for tedious repetition
 ```{r}
