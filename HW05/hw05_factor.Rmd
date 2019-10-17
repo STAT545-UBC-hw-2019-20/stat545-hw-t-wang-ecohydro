@@ -132,15 +132,15 @@ singer_fct %>%
     ggplot() + 
     geom_boxplot(aes(x=decade, y=duration)) +
     theme_bw() +
-    ylab("duration (s)") + 
-    ggtitle("Singer_location songs")
+    ylab("seconds") + 
+    ggtitle("Singer_location song duration")
 
 singer_fct %>%     
     ggplot() + 
     geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration)) +
     theme_bw() + 
-    ylab("duration (s)") + xlab("decade") +
-    ggtitle("Maximum duration of singer_location songs")
+    ylab("seconds") + xlab("decade") +
+    ggtitle("Singer_location song duration")
 ```
 
 </div>
@@ -152,15 +152,15 @@ singer_fct %>%
     ggplot() + 
     geom_boxplot(aes(x=decade, y=duration)) +
     theme_bw() +
-    ylab("duration (s)") + 
-    ggtitle("Singer_location songs")
+    ylab("seconds") + 
+    ggtitle("Singer_location song duration")
 
 singer_fct %>%     
     ggplot() + 
     geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration)) +
     theme_bw() +
-    ylab("duration (s)") + xlab("decade") +
-    ggtitle("Maximum duration of singer_location songs")
+    ylab("seconds") + xlab("decade") +
+    ggtitle("Singer_location song duration")
 ```
 
 </div>
@@ -214,7 +214,7 @@ singer_fct %>%
 
 </div>
 
-Building off the above bar graphs, let's order the song count by maximum duration per decade, starting with the longest at the top. At the same time, we can confirm our observations of the graph with the tabulated version of the data.
+Building off the above bar graphs, let's order the song count by maximum duration per decade, starting with the longest at the top. 
 
 ```{r barandtable, eval=FALSE}
 singer_fct %>% 
@@ -236,13 +236,7 @@ singer_fct %>%
 
 <div class="twoC">
 
-```{r barandtable_run, echo=FALSE, fig.height=5}
-singer_fct %>% 
-    group_by(decade) %>% 
-    summarize(longest=max(duration)) %>% 
-    arrange(desc(longest)) %>% 
-    kable()
-
+```{r barandtable_run, echo=FALSE, fig.height=6}
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(fct_reorder(decade, duration, max))) +
@@ -250,9 +244,20 @@ singer_fct %>%
     theme_bw() +
     xlab("decade") + ylab("number of entries") +
     ggtitle("Singer_locations song entries (descending order of maximum duration)")
+
+singer_fct %>% 
+    group_by(decade) %>% 
+    summarize(longest=max(duration)) %>% 
+    arrange(desc(longest)) %>% 
+    kable()
+
 ```
 
 </div>
+
+
+We can confirm our observations of the graph with the tabulated version of the data.
+
 
 
 ## Exercise 3: File input/output (I/O)
@@ -388,7 +393,7 @@ Changes to implement:
 - change Y-axis label
 - remove background gridlines
 - remove border
-- change color palette for more contrast
+- change color palette for better readability/presentation
 
 ```{r}
 gapminder %>% 
@@ -401,7 +406,7 @@ gapminder %>%
           panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
           axis.line = element_line(color = "grey")) +
-    scale_color_manual(values = c("purple", "#2DB425", "#FC4E07", "#FED51C", "blue")) +
+    scale_color_manual(values = c("#009E73", "#E69F00", "#0072B2", "#D55E00", "#CC79A7")) +
     xlab("") + ylab("USD") +
     ggtitle("Worldwide average GDP per capita increase")
 
@@ -429,14 +434,16 @@ gapminder %>%
           panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
           axis.line = element_line(color = "grey")) +
-    scale_color_manual(values = c("purple", "#2DB425", "#FC4E07", "#FED51C", "blue")) +
+    scale_color_manual(values = c("#009E73", "#E69F00", "#0072B2", "#D55E00", "#CC79A7")) +
     xlab("") + ylab("USD") +
     ggtitle("Worldwide average GDP per capita increase")
 ```
 
 </div>
 
-The major difference of the new edition is that the line colors are easier to distinguish. There's less visual clutter. I removed as many of the redundancies as I could, such as stating the years over which the data spanned in the title, and even the x-axis label. For units on the y-axis, I took a guess that the GDP per capita values were in USD, but essentially whatever currency the numbers are in should go there.
+The major difference of the new edition is that the line colors are easier to distinguish. As per the STAT545 guide, I chose a color palette that would be easily readable and translate well for the color blind and also black and white printing. 
+
+There's less visual clutter overall. I removed as many of the redundancies as I could, such as stating the years over which the data spanned in the title, and even the x-axis label. For units on the y-axis, I took a guess that the GDP per capita values were in USD, but basically whatever currency the numbers are in should go there.
 
 The new graph looks a lot more minimalistic, which helps get its point across much more efficiently.
 
