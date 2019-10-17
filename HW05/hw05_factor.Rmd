@@ -5,8 +5,15 @@ date: "10/11/2019"
 output: 
     html_document:
         toc: true
-        foc_float: true
+        toc_float: true
 ---
+
+```{r startup}
+suppressPackageStartupMessages(library(singer))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(knitr))
+```
 
 ## Exercise 1: Explain the value of the here::here package
 
@@ -23,29 +30,11 @@ In a nutshell, `here::here` makes a project much more versatile for sharing. It 
 - When retrieving files from another subdirectory, rather than having to backtrack to the parent directory and locate it from there, you can use `here()` to call directly on the sub-directory if it's in your root folder.
 - It is possible to set a separate working directory within the project and still have `here()` work because project directories take precedence.
 
-```{r}
-library(singer)
-library(tidyverse)
-library(DT)
-library(knitr)
-```
 
 
 ## Exercise 2: Factor management
 
 I have chosen to use the **Singer** dataset.
-
-*Task: Choose one dataset (of your choice) and a variable to explore. After ensuring the variable(s) you’re exploring are indeed factors, you should:*
-
-- *Drop factor / levels;*
-- *Reorder levels based on knowledge from data.*
-
-*Explore the effects of re-leveling a factor in a tibble by:*
-
-- *comparing the results of arrange on the original and re-leveled factor.*
-- *Plotting a figure of before/after re-leveling the factor (make sure to assign the factor to an aesthetic of your choosing).*
-
-*These explorations should involve the data, the factor levels, and at least two figures (before and after).*
 
 *__Elaboration for the Singer data set__*
 
@@ -74,7 +63,7 @@ singer_all
 
 There are 10,100 rows of data in this dataframe.
 
-Now let's filter out those `year = 0` entries.
+Now let's filter out the entries with "0" under Year.
 
 ```{r}
 singer_filter <- singer_all %>% 
@@ -131,58 +120,61 @@ The following is a box plot of song durations by decade, in chronological order.
 ```{r}
 singer_fct %>%     
     ggplot() + 
-    geom_boxplot(aes(x=decade, y=duration))
+    geom_boxplot(aes(x=decade, y=duration)) +
+    theme_bw() +
+    ylab("duration (s)") +
+    ggtitle("Singer_location songs")
 ```
 
-We can see that the durations of songs varies greatly, with some of the longest songs being around 2000 seconds.
+We can see that the durations of songs varies greatly, with some of the longest songs being around 2000 seconds. We can organise the decades in order of greatest to smallest maximum duration (per decade).
 
 ```{r}
 singer_fct %>%     
     ggplot() + 
-    geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration))
+    geom_boxplot(aes(x=fct_rev(fct_reorder(decade, duration, max)), y=duration)) +
+    theme_bw() +
+    ylab("duration (s)") +
+    ggtitle("Maximum duration of singer_location songs")
 ```
 
-
-Here is a bar graph of the number of songs listed for each decade:
+Here are two bar graphs of the number of songs listed for each decade. The second graph has been reordered by number of entries per decade.
 
 ```{r}
+singer_fct %>% 
+    group_by(decade) %>% 
+    count() %>% 
+    kable()
+
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(decade)) + 
-    scale_x_discrete(drop=FALSE) +
-    scale_y_log10() 
+    coord_flip() +
+    theme_bw() +
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_location song entries")
 
-singer_fct %>% 
-    count(decade) %>% 
-    kable()
-```
 
-By default, the levels happen to be arranged in chronological order. 
-
-Note that a single instance of 1930s music does exist in this dataframe, but ggplot got upset about my attempt to use `expand_limits()` to force the y-axis to start at 0. 
-
-The next graph shows the same info, but arranged in order of most to fewest songs listed per decade.
-
-```{r}
 singer_fct %>% 
     ggplot() +
     geom_bar(aes(fct_infreq(decade))) +
-    scale_y_log10()
+    coord_flip() +
+    theme_bw() +
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_location song entries")
 ```
 
-A linear y-axis scale will be used for subsequent plots.
-
-Let's order the song count by maximum duration per decade, starting with the longest. At the same time, we can confirm our observations of the graph with the tabulated version of the data.
+Building off the above bar graphs, let's order the song count by maximum duration per decade, starting with the longest at the top. At the same time, we can confirm our observations of the graph with the tabulated version of the data.
 
 ```{r}
 
 singer_fct %>% 
     ggplot() +
-    geom_bar(aes(decade))
-
-singer_fct %>% 
-    ggplot() +
-    geom_bar(aes(fct_rev(fct_reorder(decade, duration, max))))
+    geom_bar(aes(fct_reorder(decade, duration, max))) +
+    coord_flip() +
+    theme_bw() +
+    xlab("decade") + ylab("number of entries") +
+    ggtitle("Singer_locations song entries (descending order of maximum duration)")
+    
 
 singer_fct %>% 
     group_by(decade) %>% 
@@ -226,13 +218,16 @@ write_csv(singer_out, here::here("singer_fct.csv"))
 
 We can see that our `decade` column is parsed as a character class instead of factor.
 
-Now that we only have 10 years' worth of songs to work with, let's arrange them in ascending order of frequency from top to bottom.
+Now that we only have 10 years' worth of songs to work with, let's arrange them in ascending order of frequency from the top.
 
 ```{r}
 (E3_plot <- singer_load %>% 
     mutate(year=as_factor(year)) %>% 
     ggplot() + geom_bar(aes(fct_infreq(year))) +
-    coord_flip())
+    coord_flip() +
+    theme_bw() + 
+    xlab("number of songs") + ylab("year") +
+    ggtitle("Singer_location '90s songs")) 
 ```
 
 ### dput()/dget()
@@ -240,8 +235,7 @@ Now that we only have 10 years' worth of songs to work with, let's arrange them 
 I will try the same exercise with `dput()`/`dget()`.
 
 ```{r}
-dput(singer_out, file = here::here("singer_fct_d.csv"),
-     control = c("keepNA", "keepInteger", "niceNames", "showAttributes"))
+dput(singer_out, file = here::here("singer_fct_d.csv"))
 ```
 
 The file has been successfully written, but the format of the table is different than `write_csv()`'s output, which I confirmed by opening the .csv files using Excel. Trying to use `read_csv()` on the `dput()` output caused a myriad of parsing errors.
@@ -252,9 +246,7 @@ The file has been successfully written, but the format of the table is different
 
 In this case, the factor class of `decade` actually made it through the wringer. When the file is retrieved and parsed, it's still a factor. 
 
-Enough messing around with `decade`--how about using another factor? 
-
-In the code below, I extracted the first character from the `artist_name` column. The box plot describes the spread of artist familiarity for artists whose names begin with a certain letter (or number), in order from greatest maximum familiarity to least.
+For my last attempt at factor play, I extracted the first character from the `artist_name` column. The box plot describes the spread of artist familiarity for artists whose names begin with a certain letter (or number), in order from greatest maximum familiarity to least.
 
 ```{r}
 singer_first <- singer_get %>% 
@@ -266,18 +258,66 @@ singer_first %>%
     datatable()
 
 singer_first %>% 
+    ggplot() + geom_boxplot(aes(x=firstletter, y=artist_familiarity)) +
+    theme_bw() +
+    xlab("first letter of artist name") + ylab("artist familiarity") +
+    ggtitle("Singer_locations '90s song artists")
+
+singer_first %>% 
     ggplot() + geom_boxplot(aes(
         x=fct_rev(fct_reorder(firstletter, artist_familiarity, max)), 
-        y=artist_familiarity))
+        y=artist_familiarity)) +
+    theme_bw() +
+    xlab("first letter of artist name") + ylab("artist familiarity") +
+    ggtitle("Singer_locations '90s song artists (reordered)")
 ```
 
 
 
-## Exercise 4: Visualization design (20%)
-
-*Go back through your previous assignments and class participation activities and find figures you created prior to the last week of the course. Recreate at least one figure in light of something you learned in the recent class meetings about visualization design and color.*
+## Exercise 4: Visualization design
 
 *Task: Create a side-by-side plot and juxtapose your first attempt (show the original figure as-is) with a revised attempt after some time spent working on it and implementing principles of effective plotting principles. Comment and reflect on the differences.*
+
+Here is a figure from my Assignment 3, showing average GDP per capita for each continent.
+
+```{r}
+library(gapminder)
+
+gapminder %>% 
+  group_by(continent, year) %>% 
+  summarize(avggdp=mean(gdpPercap)) %>% 
+  ggplot(aes(x=year, y=avggdp, color=continent)) + geom_line(size=1.5) + theme_bw() +
+  ggtitle("Average GDP per capita, 1952-2007", subtitle="weighted by country") +
+  ylab("average GDP per capita")
+```
+
+Changes to implement:
+- shorten title and remove subtitle
+- change Y-axis label
+- remove background gridlines
+- remove border
+- change color palette for more contrast
+
+```{r}
+gapminder %>% 
+    group_by(continent, year) %>% 
+    summarize(avggdp=mean(gdpPercap)) %>% 
+    ggplot(aes(x=year, y=avggdp, color=continent)) + 
+    geom_line(size=1.5) + 
+    theme_bw() +
+    theme(panel.border = element_blank(), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "grey")) +
+    scale_color_manual(values = c("purple", "#2DB425", "#FC4E07", "#FED51C", "blue")) +
+    xlab("") + ylab("USD") +
+    ggtitle("Worldwide average GDP per capita increase")
+
+```
+
+The major difference of the new edition is that the line colors are easier to distinguish. There's less visual clutter. I removed as many of the redundancies as I could, such as stating the years over which the data spanned in the title, and even the x-axis label. For units on the y-axis, I took a guess that the GDP per capita values were in USD, but essentially whatever currency the numbers are in should go there.
+
+The new graph looks a lot more minimalistic, which helps get its point across much more efficiently.
 
 
 
@@ -287,28 +327,27 @@ singer_first %>%
 
 *Then, use `![Alt text](/path/to/img.png)` to load and embed that file into your report.* 
     
-By default, `ggsave()` renders the last plot item to file. At the time of this writing, that would be the artist familiarity box plot in Exercise 3. The image is named "firstletter_boxplot" for this reason. However, once I complete Exercise 4, I expect that this image will contain something other than the aforementioned box plot...
+By default, `ggsave()` renders the last plot item to file. When this code was first written, Exercise 4 had not been completed yet, so three guesses why the file name is "firstletter_boxplot"...
     
 ```{r}
 ggsave("firstletter_boxplot.png")
 ```
 
-Having saved the image, I can then embed it like so...
+This will save to your root directory as declared by `here::here()`. Now I can embed the image like so...
 
 ![Fig. 1: Last plotted data](firstletter_boxplot.png)
 
+Explicitly declaring the plot to save to file is important if you're going to backtrack and add more diagrams at any point.
 
-And now, writing this after completing Exercise 4, ...
-
-Here's another one, with some parameters changed this time.
+Here's another one, with some parameters changed this time. I assigned a variable back in Exercise 3 that I will now use:
 
 ```{r}
-ggsave("90s_bargraph.png", plot = E3_plot, dpi = 100, units = "mm", width = 50, height = 30)
+ggsave("90s_bargraph.png", plot = E3_plot, dpi = 100, units = "mm", width = 50, height = 50)
 ```
     
 ![Fig. 2: Bar graph from Exercise 3, shrunken and made low-res](90s_bargraph.png)
     
-The text is huge because it needs to be changed for the plot object itself (i.e. `ggsave()` only shrunk the plot area itself). 
+The text doesn't change size with the plot; that needs to be changed explicitly when creating the plot, using `theme(axis.text = element_text(size = [some_number_here]))`.
 
 <!--- Old code, rejected for tedious repetition
 ```{r}
