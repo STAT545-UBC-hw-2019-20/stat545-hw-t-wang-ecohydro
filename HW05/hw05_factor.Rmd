@@ -1,5 +1,5 @@
 ---
-title: 'Exercise 5: Factor and figure management'
+title: 'Assignment 5: Factor and figure management'
 author: "Tracy Wang"
 date: "10/11/2019"
 output: 
